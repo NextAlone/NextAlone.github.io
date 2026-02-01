@@ -339,9 +339,10 @@
         <div class="media-wrapper">
             <!-- Video Player - Bilibili iframe -->
             <div id="videoContainer" style="display: none;">
-                <iframe id="videoPlayer" width="100%" height="500" 
+                <iframe id="videoPlayer" height="500" 
+                    title="Never Gonna Give You Up - Rick Astley Video Player"
                     src="https://player.bilibili.com/player.html?aid=80433022&bvid=BV1GJ411x7h7&cid=137649199&page=1&danmaku=0&autoplay=1&high_quality=1" 
-                    scrolling="no" border="0" frameborder="no" framespacing="0" allowfullscreen="true" 
+                    allowfullscreen="true" 
                     allow="autoplay">
                 </iframe>
             </div>
@@ -417,7 +418,7 @@
             return `${mins}:${secs.toString().padStart(2, '0')}`;
         }
 
-        // Play/Pause for audio mode
+        // Play/Pause for audio mode (video controls are in iframe)
         playPauseBtn.addEventListener('click', () => {
             if (isAudioMode) {
                 if (isPlaying) {
@@ -430,7 +431,6 @@
                     playPauseBtn.textContent = '⏸️';
                 }
             }
-            // Video mode controls are handled by iframe
         });
 
         // Update progress for audio
@@ -463,6 +463,22 @@
         // Set initial volume
         audioPlayer.volume = 0.7;
 
+        // Helper function to start audio playback
+        function startAudioPlayback() {
+            // Enable play button for audio mode
+            playPauseBtn.style.opacity = '1';
+            playPauseBtn.style.cursor = 'pointer';
+            
+            audioPlayer.play().then(() => {
+                isPlaying = true;
+                playPauseBtn.textContent = '⏸️';
+            }).catch(e => {
+                console.log('Autoplay prevented:', e);
+                isPlaying = false;
+                playPauseBtn.textContent = '▶️';
+            });
+        }
+
         // Mode switching
         function switchToAudioMode() {
             isAudioMode = true;
@@ -474,14 +490,7 @@
             videoModeBtn.classList.remove('active');
             
             // Try to play audio (autoplay)
-            audioPlayer.play().then(() => {
-                isPlaying = true;
-                playPauseBtn.textContent = '⏸️';
-            }).catch(e => {
-                console.log('Autoplay prevented:', e);
-                isPlaying = false;
-                playPauseBtn.textContent = '▶️';
-            });
+            startAudioPlayback();
         }
 
         function switchToVideoMode() {
@@ -495,7 +504,10 @@
             videoModeBtn.classList.add('active');
             audioModeBtn.classList.remove('active');
             
-            playPauseBtn.textContent = '⏸️';
+            // Video playback is controlled by iframe
+            playPauseBtn.textContent = '▶️';
+            playPauseBtn.style.opacity = '0.5';
+            playPauseBtn.style.cursor = 'not-allowed';
             
             // Reset progress for video mode
             progressFill.style.width = '0%';
@@ -508,15 +520,7 @@
 
         // Auto-play on load (audio mode by default)
         window.addEventListener('load', () => {
-            // Start with audio mode
-            audioPlayer.play().then(() => {
-                isPlaying = true;
-                playPauseBtn.textContent = '⏸️';
-            }).catch(e => {
-                console.log('Autoplay prevented. User interaction required.');
-                isPlaying = false;
-                playPauseBtn.textContent = '▶️';
-            });
+            startAudioPlayback();
         });
 
         // Sync play/pause button with player state
