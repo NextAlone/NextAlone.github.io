@@ -1,27 +1,642 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
+<head>
     <meta charset="UTF-8">
-    <title>NextAlone</title>
-  </head>
-
-  <body>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Never Gonna Give You Up - Player</title>
     <style>
-.main{
-  text-align: center;
-  background-color: #fff;
-  border-radius: 20px;
-  width: 600px;
-  height: 600px;
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  transform: translate(-50%,-50%);
-}
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+            background: #121212;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            color: #fff;
+        }
+
+        .player-container {
+            background: linear-gradient(180deg, #1db954 0%, #121212 300px);
+            border-radius: 8px;
+            max-width: 900px;
+            width: 100%;
+            overflow: hidden;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+        }
+
+        .player-content {
+            padding: 40px;
+        }
+
+        .mode-toggle {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 30px;
+            justify-content: center;
+        }
+
+        .mode-btn {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            color: #fff;
+            padding: 10px 24px;
+            border-radius: 24px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+        }
+
+        .mode-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: scale(1.05);
+        }
+
+        .mode-btn.active {
+            background: #1db954;
+            border-color: #1db954;
+        }
+
+        .media-section {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+
+        .album-art {
+            width: 300px;
+            height: 300px;
+            border-radius: 8px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+            margin-bottom: 30px;
+            overflow: hidden;
+            background: #282828;
+            position: relative;
+        }
+
+        .album-art img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        #videoContainer {
+            display: none;
+            width: 100%;
+            max-width: 640px;
+            margin: 0 auto;
+        }
+
+        #videoContainer.active {
+            display: block;
+        }
+
+        #videoContainer iframe {
+            width: 100%;
+            height: 400px;
+            border: none;
+            border-radius: 8px;
+        }
+
+        .audio-visualizer {
+            width: 100%;
+            height: 300px;
+            background: linear-gradient(180deg, #282828 0%, #181818 100%);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .audio-visualizer.active {
+            display: flex;
+        }
+
+        .waveform-container {
+            width: 100%;
+            height: 120px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+            padding: 0 30px;
+        }
+
+        .wave-bar {
+            flex: 1;
+            max-width: 8px;
+            background: #1db954;
+            border-radius: 4px;
+            animation: wave 1.2s ease-in-out infinite;
+            opacity: 0.8;
+        }
+
+        @keyframes wave {
+            0%, 100% { height: 20px; }
+            50% { height: 80px; }
+        }
+
+        .track-info {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .track-info h1 {
+            font-size: 36px;
+            font-weight: 700;
+            margin-bottom: 8px;
+            color: #fff;
+        }
+
+        .track-info p {
+            font-size: 18px;
+            color: #b3b3b3;
+            font-weight: 500;
+        }
+
+        .controls-container {
+            background: #181818;
+            padding: 24px 40px;
+            border-radius: 0 0 8px 8px;
+        }
+
+        .progress-container {
+            margin-bottom: 20px;
+        }
+
+        .time-info {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            font-size: 12px;
+            color: #b3b3b3;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 4px;
+            background: #4d4d4d;
+            border-radius: 2px;
+            cursor: pointer;
+            position: relative;
+            transition: height 0.2s;
+        }
+
+        .progress-bar:hover {
+            height: 6px;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: #1db954;
+            border-radius: 2px;
+            width: 0%;
+            position: relative;
+        }
+
+        .progress-fill::after {
+            content: '';
+            position: absolute;
+            right: 0;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 12px;
+            height: 12px;
+            background: #fff;
+            border-radius: 50%;
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+
+        .progress-bar:hover .progress-fill::after {
+            opacity: 1;
+        }
+
+        .player-controls {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 20px;
+        }
+
+        .main-controls {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            flex: 1;
+            justify-content: center;
+        }
+
+        .control-btn {
+            background: none;
+            border: none;
+            color: #b3b3b3;
+            cursor: pointer;
+            font-size: 16px;
+            padding: 8px;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .control-btn:hover {
+            color: #fff;
+            transform: scale(1.1);
+        }
+
+        .play-pause-btn {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            background: #fff;
+            border: none;
+            color: #000;
+            font-size: 20px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+
+        .play-pause-btn:hover {
+            transform: scale(1.06);
+            background: #f0f0f0;
+        }
+
+        .volume-control {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            min-width: 150px;
+        }
+
+        .volume-icon {
+            font-size: 20px;
+            color: #b3b3b3;
+            cursor: pointer;
+        }
+
+        .volume-slider {
+            flex: 1;
+            height: 4px;
+            border-radius: 2px;
+            background: #4d4d4d;
+            outline: none;
+            -webkit-appearance: none;
+            cursor: pointer;
+        }
+
+        .volume-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #fff;
+            cursor: pointer;
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+
+        .volume-slider:hover::-webkit-slider-thumb {
+            opacity: 1;
+        }
+
+        .volume-slider::-moz-range-thumb {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #fff;
+            cursor: pointer;
+            border: none;
+        }
+
+        .volume-slider::-webkit-slider-runnable-track {
+            height: 4px;
+            background: linear-gradient(to right, #1db954 0%, #1db954 var(--volume-percent, 70%), #4d4d4d var(--volume-percent, 70%), #4d4d4d 100%);
+            border-radius: 2px;
+        }
+
+        /* Mobile Responsive */
+        @media (max-width: 768px) {
+            .player-content {
+                padding: 30px 20px;
+            }
+
+            .album-art {
+                width: 250px;
+                height: 250px;
+            }
+
+            .track-info h1 {
+                font-size: 28px;
+            }
+
+            .track-info p {
+                font-size: 16px;
+            }
+
+            .controls-container {
+                padding: 20px;
+            }
+
+            .player-controls {
+                flex-direction: column;
+                gap: 16px;
+            }
+
+            .volume-control {
+                width: 100%;
+                max-width: 100%;
+            }
+
+            #videoContainer iframe {
+                height: 280px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .album-art {
+                width: 200px;
+                height: 200px;
+            }
+
+            .track-info h1 {
+                font-size: 24px;
+            }
+
+            .mode-btn {
+                padding: 8px 16px;
+                font-size: 12px;
+            }
+        }
+
+        audio {
+            display: none;
+        }
     </style>
-    <div class="main">
-      <h1>Never gonna give you up</h1>
-      <iframe width="600" height="340" src="https://player.bilibili.com/player.html?aid=80433022&bvid=BV1GJ411x7h7&cid=137649199&page=1&danmaku=0&t=1&high_quality=1" scrolling="no" border="0" frameborder="no" framespacing="0" allowfullscreen="true"> </iframe>
+</head>
+<body>
+    <div class="player-container">
+        <div class="player-content">
+            <div class="mode-toggle">
+                <button class="mode-btn active" id="audioMode">🎵 Audio</button>
+                <button class="mode-btn" id="videoMode">🎬 Video</button>
+            </div>
+
+            <div class="media-section">
+                <!-- Album Art / Audio Visualizer -->
+                <div class="album-art" id="albumArt">
+                    <div class="audio-visualizer active" id="audioVisualizer">
+                        <div class="waveform-container" id="waveform"></div>
+                    </div>
+                </div>
+
+                <!-- Video Player -->
+                <div id="videoContainer">
+                    <iframe id="videoPlayer" 
+                        title="Never Gonna Give You Up - Rick Astley Video Player"
+                        src="https://player.bilibili.com/player.html?aid=80433022&bvid=BV1GJ411x7h7&cid=137649199&page=1&danmaku=0&autoplay=1&high_quality=1" 
+                        allowfullscreen
+                        allow="autoplay">
+                    </iframe>
+                </div>
+
+                <!-- Track Info -->
+                <div class="track-info">
+                    <h1>Never Gonna Give You Up</h1>
+                    <p>Rick Astley</p>
+                </div>
+            </div>
+
+            <audio id="audioPlayer" loop>
+                <source src="https://ia800905.us.archive.org/19/items/Rick_Astley_Never_Gonna_Give_You_Up/Rick_Astley_Never_Gonna_Give_You_Up.ogg" type="audio/ogg">
+                <source src="https://archive.org/download/Rick_Astley_Never_Gonna_Give_You_Up/Rick_Astley_Never_Gonna_Give_You_Up.mp3" type="audio/mpeg">
+            </audio>
+        </div>
+
+        <div class="controls-container" id="controlsContainer">
+            <div class="progress-container">
+                <div class="time-info">
+                    <span id="currentTime">0:00</span>
+                    <span id="duration">0:00</span>
+                </div>
+                <div class="progress-bar" id="progressBar">
+                    <div class="progress-fill" id="progressFill"></div>
+                </div>
+            </div>
+
+            <div class="player-controls">
+                <div class="volume-control">
+                    <span class="volume-icon" id="volumeIcon">🔊</span>
+                    <input type="range" class="volume-slider" id="volumeSlider" min="0" max="100" value="70" aria-label="Volume control">
+                </div>
+
+                <div class="main-controls">
+                    <button class="play-pause-btn" id="playPauseBtn">▶</button>
+                </div>
+
+                <div style="min-width: 150px;"></div> <!-- Spacer for layout -->
+            </div>
+        </div>
     </div>
-  </body>
+
+    <script>
+        const audioPlayer = document.getElementById('audioPlayer');
+        const videoContainer = document.getElementById('videoContainer');
+        const audioVisualizer = document.getElementById('audioVisualizer');
+        const albumArt = document.getElementById('albumArt');
+        const playPauseBtn = document.getElementById('playPauseBtn');
+        const progressBar = document.getElementById('progressBar');
+        const progressFill = document.getElementById('progressFill');
+        const currentTimeEl = document.getElementById('currentTime');
+        const durationEl = document.getElementById('duration');
+        const volumeSlider = document.getElementById('volumeSlider');
+        const volumeIcon = document.getElementById('volumeIcon');
+        const audioModeBtn = document.getElementById('audioMode');
+        const videoModeBtn = document.getElementById('videoMode');
+        const waveformContainer = document.getElementById('waveform');
+        const controlsContainer = document.getElementById('controlsContainer');
+
+        let isAudioMode = true;
+        let isPlaying = false;
+
+        // Create waveform bars
+        for (let i = 0; i < 60; i++) {
+            const bar = document.createElement('div');
+            bar.className = 'wave-bar';
+            bar.style.animationDelay = `${i * 0.04}s`;
+            bar.style.height = `${Math.random() * 60 + 20}px`;
+            waveformContainer.appendChild(bar);
+        }
+
+        // Format time
+        function formatTime(seconds) {
+            if (isNaN(seconds) || seconds === Infinity || seconds < 0) return '0:00';
+            const mins = Math.floor(seconds / 60);
+            const secs = Math.floor(seconds % 60);
+            return `${mins}:${secs.toString().padStart(2, '0')}`;
+        }
+
+        // Play/Pause
+        playPauseBtn.addEventListener('click', () => {
+            if (isAudioMode) {
+                if (isPlaying) {
+                    audioPlayer.pause();
+                } else {
+                    audioPlayer.play().catch(e => {
+                        console.log('Play prevented:', e);
+                    });
+                }
+            }
+        });
+
+        // Update progress
+        function updateProgress() {
+            if (audioPlayer.duration && !isNaN(audioPlayer.duration) && audioPlayer.duration !== Infinity) {
+                const progress = (audioPlayer.currentTime / audioPlayer.duration) * 100;
+                progressFill.style.width = `${progress}%`;
+                currentTimeEl.textContent = formatTime(audioPlayer.currentTime);
+                durationEl.textContent = formatTime(audioPlayer.duration);
+            }
+        }
+
+        audioPlayer.addEventListener('timeupdate', updateProgress);
+        audioPlayer.addEventListener('loadedmetadata', updateProgress);
+
+        // Seek functionality
+        progressBar.addEventListener('click', (e) => {
+            if (isAudioMode && audioPlayer.duration && audioPlayer.duration !== Infinity) {
+                const rect = progressBar.getBoundingClientRect();
+                const percent = (e.clientX - rect.left) / rect.width;
+                audioPlayer.currentTime = percent * audioPlayer.duration;
+            }
+        });
+
+        // Volume control
+        volumeSlider.addEventListener('input', (e) => {
+            const volume = e.target.value / 100;
+            audioPlayer.volume = volume;
+            volumeSlider.style.setProperty('--volume-percent', e.target.value + '%');
+            
+            // Update volume icon
+            if (volume === 0) {
+                volumeIcon.textContent = '🔇';
+            } else if (volume < 0.5) {
+                volumeIcon.textContent = '🔉';
+            } else {
+                volumeIcon.textContent = '🔊';
+            }
+        });
+
+        // Set initial volume
+        audioPlayer.volume = 0.7;
+        volumeSlider.style.setProperty('--volume-percent', '70%');
+
+        // Mute toggle
+        volumeIcon.addEventListener('click', () => {
+            if (audioPlayer.volume > 0) {
+                audioPlayer.dataset.previousVolume = audioPlayer.volume;
+                audioPlayer.volume = 0;
+                volumeSlider.value = 0;
+                volumeSlider.style.setProperty('--volume-percent', '0%');
+                volumeIcon.textContent = '🔇';
+            } else {
+                const prevVolume = parseFloat(audioPlayer.dataset.previousVolume) || 0.7;
+                audioPlayer.volume = prevVolume;
+                volumeSlider.value = prevVolume * 100;
+                volumeSlider.style.setProperty('--volume-percent', (prevVolume * 100) + '%');
+                volumeIcon.textContent = '🔊';
+            }
+        });
+
+        // Mode switching
+        function switchToAudioMode() {
+            isAudioMode = true;
+            
+            videoContainer.classList.remove('active');
+            audioVisualizer.classList.add('active');
+            albumArt.style.display = 'block';
+            controlsContainer.style.display = 'block';
+            
+            audioModeBtn.classList.add('active');
+            videoModeBtn.classList.remove('active');
+            
+            // Start audio playback
+            const playPromise = audioPlayer.play();
+            if (playPromise !== undefined) {
+                playPromise.then(() => {
+                    console.log('Audio started playing');
+                }).catch(e => {
+                    console.log('Autoplay prevented, waiting for user interaction');
+                    // Auto-start on first click
+                    const startOnClick = () => {
+                        audioPlayer.play().catch(err => console.log('Play failed:', err));
+                    };
+                    document.addEventListener('click', startOnClick, { once: true });
+                });
+            }
+        }
+
+        function switchToVideoMode() {
+            isAudioMode = false;
+            
+            audioPlayer.pause();
+            videoContainer.classList.add('active');
+            audioVisualizer.classList.remove('active');
+            albumArt.style.display = 'none';
+            controlsContainer.style.display = 'none';
+            
+            videoModeBtn.classList.add('active');
+            audioModeBtn.classList.remove('active');
+        }
+
+        audioModeBtn.addEventListener('click', switchToAudioMode);
+        videoModeBtn.addEventListener('click', switchToVideoMode);
+
+        // Sync play/pause button with player state
+        audioPlayer.addEventListener('play', () => {
+            isPlaying = true;
+            playPauseBtn.textContent = '⏸';
+        });
+        
+        audioPlayer.addEventListener('pause', () => {
+            isPlaying = false;
+            playPauseBtn.textContent = '▶';
+        });
+
+        // Auto-play on load
+        window.addEventListener('load', () => {
+            // Try to autoplay
+            const playPromise = audioPlayer.play();
+            if (playPromise !== undefined) {
+                playPromise.then(() => {
+                    console.log('Autoplay successful');
+                }).catch(e => {
+                    console.log('Autoplay blocked, will start on user interaction');
+                    // Start on first user interaction
+                    const startOnInteraction = () => {
+                        audioPlayer.play().then(() => {
+                            console.log('Playback started after user interaction');
+                        }).catch(err => console.log('Play failed:', err));
+                    };
+                    document.addEventListener('click', startOnInteraction, { once: true });
+                    document.addEventListener('touchstart', startOnInteraction, { once: true });
+                });
+            }
+        });
+    </script>
+</body>
 </html>
