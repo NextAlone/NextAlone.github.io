@@ -357,8 +357,9 @@
             </div>
             
             <audio id="audioPlayer" loop autoplay>
-                <!-- No audio source specified - the animated waveform provides visual feedback -->
-                <!-- To add actual audio playback, add: <source src="audio-url.mp3" type="audio/mpeg"> -->
+                <!-- Using a public domain audio URL - replace with actual Rick Astley audio if available -->
+                <source src="https://ia800905.us.archive.org/19/items/Rick_Astley_Never_Gonna_Give_You_Up/Rick_Astley_Never_Gonna_Give_You_Up.ogg" type="audio/ogg">
+                <source src="https://archive.org/download/Rick_Astley_Never_Gonna_Give_You_Up/Rick_Astley_Never_Gonna_Give_You_Up.mp3" type="audio/mpeg">
             </audio>
         </div>
 
@@ -397,6 +398,7 @@
         const audioModeBtn = document.getElementById('audioMode');
         const videoModeBtn = document.getElementById('videoMode');
         const waveformContainer = document.getElementById('waveform');
+        const controlsContainer = document.querySelector('.controls');
 
         let isAudioMode = true;
         let isPlaying = false;
@@ -469,14 +471,31 @@
             playPauseBtn.style.opacity = '1';
             playPauseBtn.style.cursor = 'pointer';
             
-            audioPlayer.play().then(() => {
-                isPlaying = true;
-                playPauseBtn.textContent = '⏸️';
-            }).catch(e => {
-                console.log('Autoplay prevented:', e);
-                isPlaying = false;
-                playPauseBtn.textContent = '▶️';
-            });
+            // Try to play with more aggressive retry
+            const attemptPlay = () => {
+                audioPlayer.play().then(() => {
+                    isPlaying = true;
+                    playPauseBtn.textContent = '⏸️';
+                    console.log('Audio playback started successfully');
+                }).catch(e => {
+                    console.log('Autoplay prevented:', e.message);
+                    isPlaying = false;
+                    playPauseBtn.textContent = '▶️';
+                    
+                    // Add click handler to start playback on first user interaction
+                    const startOnClick = () => {
+                        audioPlayer.play().then(() => {
+                            isPlaying = true;
+                            playPauseBtn.textContent = '⏸️';
+                            document.removeEventListener('click', startOnClick);
+                        }).catch(err => console.log('Play failed:', err));
+                    };
+                    document.addEventListener('click', startOnClick, { once: true });
+                });
+            };
+            
+            // Attempt play immediately
+            attemptPlay();
         }
 
         // Mode switching
@@ -485,6 +504,7 @@
             
             videoContainer.style.display = 'none';
             audioVisualizer.classList.add('active');
+            controlsContainer.style.display = 'block';
             
             audioModeBtn.classList.add('active');
             videoModeBtn.classList.remove('active');
@@ -500,19 +520,10 @@
             isPlaying = false;
             audioVisualizer.classList.remove('active');
             videoContainer.style.display = 'block';
+            controlsContainer.style.display = 'none';
             
             videoModeBtn.classList.add('active');
             audioModeBtn.classList.remove('active');
-            
-            // Video playback is controlled by iframe
-            playPauseBtn.textContent = '▶️';
-            playPauseBtn.style.opacity = '0.5';
-            playPauseBtn.style.cursor = 'not-allowed';
-            
-            // Reset progress for video mode
-            progressFill.style.width = '0%';
-            currentTimeEl.textContent = '0:00';
-            durationEl.textContent = '0:00';
         }
 
         audioModeBtn.addEventListener('click', switchToAudioMode);
