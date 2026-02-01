@@ -441,7 +441,7 @@
             <div class="player-controls">
                 <div class="volume-control">
                     <span class="volume-icon" id="volumeIcon">🔊</span>
-                    <input type="range" class="volume-slider" id="volumeSlider" min="0" max="100" value="70">
+                    <input type="range" class="volume-slider" id="volumeSlider" min="0" max="100" value="70" aria-label="Volume control">
                 </div>
 
                 <div class="main-controls">
@@ -484,7 +484,7 @@
 
         // Format time
         function formatTime(seconds) {
-            if (isNaN(seconds) || seconds === Infinity) return '0:00';
+            if (isNaN(seconds) || seconds === Infinity || seconds < 0) return '0:00';
             const mins = Math.floor(seconds / 60);
             const secs = Math.floor(seconds % 60);
             return `${mins}:${secs.toString().padStart(2, '0')}`;
@@ -584,9 +584,8 @@
                     // Auto-start on first click
                     const startOnClick = () => {
                         audioPlayer.play().catch(err => console.log('Play failed:', err));
-                        document.removeEventListener('click', startOnClick);
                     };
-                    document.addEventListener('click', startOnClick);
+                    document.addEventListener('click', startOnClick, { once: true });
                 });
             }
         }
@@ -632,11 +631,9 @@
                         audioPlayer.play().then(() => {
                             console.log('Playback started after user interaction');
                         }).catch(err => console.log('Play failed:', err));
-                        document.removeEventListener('click', startOnInteraction);
-                        document.removeEventListener('touchstart', startOnInteraction);
                     };
-                    document.addEventListener('click', startOnInteraction);
-                    document.addEventListener('touchstart', startOnInteraction);
+                    document.addEventListener('click', startOnInteraction, { once: true });
+                    document.addEventListener('touchstart', startOnInteraction, { once: true });
                 });
             }
         });
