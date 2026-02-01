@@ -357,7 +357,6 @@
             </div>
             
             <audio id="audioPlayer" loop autoplay>
-                <!-- Using a public domain audio URL - replace with actual Rick Astley audio if available -->
                 <source src="https://ia800905.us.archive.org/19/items/Rick_Astley_Never_Gonna_Give_You_Up/Rick_Astley_Never_Gonna_Give_You_Up.ogg" type="audio/ogg">
                 <source src="https://archive.org/download/Rick_Astley_Never_Gonna_Give_You_Up/Rick_Astley_Never_Gonna_Give_You_Up.mp3" type="audio/mpeg">
             </audio>
@@ -487,8 +486,7 @@
                         audioPlayer.play().then(() => {
                             isPlaying = true;
                             playPauseBtn.textContent = '⏸️';
-                            document.removeEventListener('click', startOnClick);
-                        }).catch(err => console.log('Play failed:', err));
+                        }).catch(err => console.log('Playback failed on user interaction:', err));
                     };
                     document.addEventListener('click', startOnClick, { once: true });
                 });
